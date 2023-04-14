@@ -1,0 +1,5 @@
+# Aquí se especifica los archivos que no queremos que se suban a nuestro repositorio compartido
+# En un caso real se debe descomentar
+
+# secret json
+usuarios/secret.json 
