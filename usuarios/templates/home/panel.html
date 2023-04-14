@@ -1,0 +1,9 @@
+<!-- Una vez que el login es correcto Django crea un objeto 'user' para todo el contexto del Proyecto
+es por eso que podemos acceder desde aca con solo poner user -->
+
+<h1>Panel de Usuario</h1>
+<h3>Bienvenido: {{ user }}</h3>
+<ul>
+    <li><a href="{% url 'users:logout' %}">Cerrar Sesión</a></li>
+    <li><a href="#">Actualizar Datos</a></li>
+</ul>
