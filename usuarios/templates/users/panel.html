@@ -5,5 +5,5 @@ es por eso que podemos acceder desde aca con solo poner user -->
 <h3>Bienvenido: {{ user }}</h3>
 <ul>
     <li><a href="{% url 'users:logout' %}">Cerrar Sesión</a></li>
-    <li><a href="{% url 'users:password_update' %}">Actualizar Datos</a></li>
+    <li><a href="{% url 'users:password_update' user.username %}">Actualizar Datos</a></li>
 </ul>

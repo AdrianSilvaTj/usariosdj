@@ -77,6 +77,13 @@ class LoginForm(forms.Form):
         return cleaned_data
     
 class PasswordUpdateForm(forms.Form):
+    
+    def __init__(self, username, *args, **kwargs):
+        """ Se le indica al formulario que en su inicialización se le pasara un nueva parametro 'username' 
+        y este se va a guardar en self.username """
+        self.username = username
+        super(PasswordUpdateForm, self).__init__(*args, **kwargs)
+    
     password1 = forms.CharField(
         label='Contraseña Actual',
         required=True,
@@ -96,8 +103,40 @@ class PasswordUpdateForm(forms.Form):
         )
     )
     
+    def clean(self):
+        #Se autentica el usuario, para verificar que se ingresó el password correcto
+        user_auth = authenticate(
+            username=self.username,
+            password=self.cleaned_data['password1']
+        )
+        if not user_auth:
+            raise forms.ValidationError("La contraseña Actual es incorrecta")
+    
 class VerificationForm(forms.Form):
-    password1 = forms.CharField(
+    code_ver = forms.CharField(
         label='Ingrese el código enviado',
         required=True,        
     )
+    
+    def __init__(self, pk, *args, **kwargs):
+        """ Se le indica al formulario que en su inicialización se le pasara un nueva parametro 'pk' 
+        y este se va a guardar en id_user """
+        self.id_user = pk
+        super(VerificationForm, self).__init__(*args, **kwargs)
+        
+    
+    def clean_code_ver(self):
+        code = self.cleaned_data['code_ver']
+        
+        if len(code) == 6:
+            # Verificamos si el id y el codigo enviado son validos
+            active = User.objects.code_validation(
+                self.id_user,
+                code
+            )
+            if not active:
+                raise forms.ValidationError("El código es incorrecto")
+                        
+        else:
+            raise forms.ValidationError("El código es incorrecto")
+        

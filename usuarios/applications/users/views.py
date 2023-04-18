@@ -24,25 +24,50 @@ class UserRegisterView(FormView):
         # generamos el código de validación
         code = code_generator()
         
-        User.objects.create_user(
-            form.cleaned_data['username'],
-            form.cleaned_data['email'],
-            form.cleaned_data['password1'],
-            first_name = form.cleaned_data['first_name'],
-            last_name = form.cleaned_data['last_name'],
-            gender = form.cleaned_data['gender'],
-            is_staff=form.cleaned_data['is_staff'],
-            cod_register = code
-        )
+        user_reg = User.objects.create_user(
+                        form.cleaned_data['username'],
+                        form.cleaned_data['email'],
+                        form.cleaned_data['password1'],
+                        first_name = form.cleaned_data['first_name'],
+                        last_name = form.cleaned_data['last_name'],
+                        gender = form.cleaned_data['gender'],
+                        is_staff=form.cleaned_data['is_staff'],
+                        cod_register = code
+                    )
         # enviar código al email del user
         subject = 'Confirmación de email'
         message = 'Código de verificación: '+ code
         email_sender = 'adrian.silva.tj@gmail.com'
         send_mail(subject, message, email_sender, [form.cleaned_data['email']])
-        # redirigir a pantalla de validación
-        return HttpResponseRedirect(reverse('users:verification'))
+        # redirigir a pantalla de validación, pasamos el id por parámetro a la url
+        print(user_reg.id)
+        return HttpResponseRedirect(
+            reverse('users:verification', kwargs={'pk':user_reg.id})            
+            )
         
         #return super(UserRegisterView, self).form_valid(form)
+    
+class VerificationView(FormView):
+    """ Vista donde se verifica el codigo enviado para el registro de usuario """
+    template_name = 'users/verification.html'
+    form_class = VerificationForm
+    success_url = reverse_lazy('users:login')
+    
+    def get_form_kwargs(self):
+        """ Modifica los kwarg (argumentos pasados al formulario) o contexto """
+        kwargs = super(VerificationView,self).get_form_kwargs()
+        kwargs.update({ 'pk' : self.kwargs['pk'] })
+        return kwargs
+    
+    def form_valid(self, form): 
+        """" Actualizamos el atributo 'is_active', una vez que se valida la información """
+        User.objects.filter(
+            id=self.kwargs['pk']
+        ).update(
+            is_active=True
+        )
+        
+        return super(VerificationView, self).form_valid(form)
     
 class LoginView(FormView):
     """ Vista donde se autentican los datos del login y se realiza el mismo """
@@ -76,40 +101,22 @@ class PasswordUpdateView(LoginRequiredMixin, FormView):
     form_class = PasswordUpdateForm
     success_url = reverse_lazy('users:login')
     login_url = reverse_lazy('users:login')
+        
+    user_log = {}
+    
+    def get_form_kwargs(self):
+        """ Modifica los kwarg (argumentos pasados al formulario) o contexto """
+        self.user_log=self.request.user # Recuperar el usuario activo
+        kwargs = super(PasswordUpdateView,self).get_form_kwargs()
+        kwargs.update({ 'username' : self.user_log.username })
+        return kwargs
     
     def form_valid(self, form):
-        user = self.request.user # Recuperar el usuario activo
-        
-        #Se autentica el usuario
-        user_auth = authenticate(
-            username=user.username,
-            password=form.cleaned_data['password1']
-        )
-        
-        # Si existe el usuario se actualiza el password
-        if user_auth:
-            # Si existe el usuario se actualiza el password
-            new_password = form.cleaned_data['password2']
-            user.set_password(new_password)
-            user.save()
-            logout(self.request)
-            
-        # else:
-        #     print('*************')
-        #     form.add_error('password1', 'Contraseña incorrecta')
-        #     print(form)
-        #     self.success_url=reverse_lazy('users:password_update')
-        #     #return HttpResponseRedirect(reverse_lazy('users:password_update'))
-        #     #raise ("Los datos del usuario no son correctos")           
+        """ Modifica el password del usuario """
+        new_password = form.cleaned_data['password2']
+        self.user_log.set_password(new_password)
+        self.user_log.save()
+        logout(self.request)        
         return super(PasswordUpdateView, self).form_valid(form)
         
         
-class VerificationView(FormView):
-    """ Vista donde se verifica el codigo enviado para el registro de usuario """
-    template_name = 'users/verification.html'
-    form_class = VerificationForm
-    success_url = reverse_lazy('users:login')
-    
-    def form_valid(self, form):
-        
-        return super(VerificationView, self).form_valid(form)

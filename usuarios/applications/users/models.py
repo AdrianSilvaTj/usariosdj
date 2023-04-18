@@ -17,7 +17,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     gender = models.CharField("Genero", max_length=1, choices=GENDER_CHOICES, blank=True)
     cod_register = models.CharField(max_length=6, blank=True)
     is_staff = models.BooleanField(default=False)
-    is_active =  models.BooleanField(default=True)
+    is_active =  models.BooleanField(default=False)
 
     # Campos requeridos por el AbstractBaseUser, USERNAME_FIELD, campo para el nombre de usuario
     # REQUIRED_FIELDS, otros campos que se pediran en la creación de usuarios
