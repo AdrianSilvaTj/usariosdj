@@ -32,7 +32,8 @@ class UserRegisterForm(forms.ModelForm):
             'first_name',
             'last_name',
             'gender',
-            'is_staff'
+            'is_staff',
+            'is_active'
         )
     
     def clean_password2(self):
@@ -64,14 +65,39 @@ class LoginForm(forms.Form):
     def clean(self):
         """ Aca se validara que existan los datos del usuario ingresado """
         cleaned_data = super(LoginForm, self).clean() # Para poder retornar todos los datos del formulario
-        user = authenticate(
-            username=self.cleaned_data['username'],
-            password=self.cleaned_data['password']
+        userauth = authenticate(
+            username=cleaned_data['username'],
+            password=cleaned_data['password']
         )
-        
-        if not user:
+        if not userauth:
             raise forms.ValidationError("Los datos del usuario no son correctos")
         else:
-            self.cleaned_data['user']=user
+            cleaned_data['user']= userauth
             
-        return self.cleaned_data
+        return cleaned_data
+    
+class PasswordUpdateForm(forms.Form):
+    password1 = forms.CharField(
+        label='Contraseña Actual',
+        required=True,
+        widget = forms.PasswordInput(
+            attrs={
+                'placeholder': 'Contraseña'
+            }
+        )
+    )
+    password2 = forms.CharField(
+        label='Contraseña Nueva',
+        required=True,
+        widget = forms.PasswordInput(
+            attrs={
+                'placeholder': 'Contraseña'
+            }
+        )
+    )
+    
+class VerificationForm(forms.Form):
+    password1 = forms.CharField(
+        label='Ingrese el código enviado',
+        required=True,        
+    )
